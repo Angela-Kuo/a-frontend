@@ -1,33 +1,29 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: 'http://localhost:3002/api', // 後端 API 根網址
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// 請求攔截器：自動放入 Token
-api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-  return config;
-});
+// 請求攔截器：自動在每個請求帶上 Authorization Header
+api.interceptors.request.use(
+  (config) => {
+    if (typeof window !== 'undefined') {
+      // 依序嘗試讀取常見的 token 儲存 key
+      const token =
+        localStorage.getItem('token') ||
+        localStorage.getItem('accessToken') ||
+        localStorage.getItem('jwt');
 
-// 回應攔截器：統一處理 401 (未授權)
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
     }
+    return config;
+  },
+  (error) => {
     return Promise.reject(error);
   }
 );
