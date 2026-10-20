@@ -16,6 +16,7 @@ import {
   UserCheck,
   Sparkles,
   ChevronRight,
+  ClipboardList,
 } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -52,10 +53,30 @@ export default function DashboardLayout({
   };
 
   /**
+   * 檢查是否具有某一項 operation
+   */
+  const hasOperation = (
+    resource: string,
+    action: string
+  ) => {
+    return (
+      user?.operations?.some(
+        (op) =>
+          op.resource === resource &&
+          op.action === action
+      ) ?? false
+    );
+  };
+
+  /**
    * 各頁面的存取資格
+   *
+   * T2：使用者頁需 User/read，
+   * 群組頁需 Group/read，
+   * 稽核紀錄頁需 AuditLog/read。
    */
   const canAccessUsers =
-    hasResourceAccess('User');
+    hasOperation('User', 'read');
 
   /**
    * Group 頁同時承載：
@@ -67,10 +88,7 @@ export default function DashboardLayout({
    * 就應該允許進入 Group 頁。
    */
   const canAccessGroups =
-    hasResourceAccess('Group') ||
-    hasResourceAccess(
-      'GroupMember'
-    );
+    hasOperation('Group', 'read');
 
   const canAccessRoles =
     hasResourceAccess('Role');
@@ -79,6 +97,9 @@ export default function DashboardLayout({
     hasResourceAccess(
       'Permission'
     );
+
+  const canAccessAuditLogs =
+    hasOperation('AuditLog', 'read');
 
   /**
    * 找出目前使用者第一個
@@ -93,7 +114,9 @@ export default function DashboardLayout({
           ? '/roles'
           : canAccessPermissions
             ? '/permissions'
-            : '/no-access';
+            : canAccessAuditLogs
+              ? '/audit-logs'
+              : '/no-access';
 
   /**
    * 判斷目前網址是否允許存取。
@@ -131,6 +154,14 @@ export default function DashboardLayout({
       )
     ) {
       return canAccessPermissions;
+    }
+
+    if (
+      pathname.startsWith(
+        '/audit-logs'
+      )
+    ) {
+      return canAccessAuditLogs;
     }
 
     return true;
@@ -435,6 +466,48 @@ export default function DashboardLayout({
 
                 <div className="mt-0.5 text-[10px] text-zinc-400">
                   Permissions
+                </div>
+
+              </div>
+
+              <ChevronRight className="h-4 w-4 text-zinc-300 opacity-0 transition group-hover:opacity-100" />
+
+            </Link>
+          )}
+
+          {canAccessAuditLogs && (
+            <Link
+              href="/audit-logs"
+              data-testid="nav-audit-logs"
+              className={`group relative flex items-center gap-3 rounded-2xl px-3 py-3 transition-all duration-200 ${
+                pathname.startsWith('/audit-logs')
+                  ? 'bg-gradient-to-r from-indigo-50 to-violet-50 text-indigo-700 shadow-[inset_0_0_0_1px_rgba(99,102,241,0.08)]'
+                  : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900'
+              }`}
+            >
+
+              {pathname.startsWith('/audit-logs') && (
+                <div className="absolute left-0 h-7 w-1 rounded-r-full bg-indigo-500" />
+              )}
+
+              <div
+                className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+                  pathname.startsWith('/audit-logs')
+                    ? 'bg-white text-indigo-600 shadow-sm'
+                    : 'bg-zinc-50 text-zinc-400 group-hover:bg-white group-hover:text-zinc-600'
+                }`}
+              >
+                <ClipboardList className="h-[18px] w-[18px]" />
+              </div>
+
+              <div className="min-w-0 flex-1">
+
+                <div className="text-[13px] font-semibold">
+                  稽核紀錄
+                </div>
+
+                <div className="mt-0.5 text-[10px] text-zinc-400">
+                  Audit Logs
                 </div>
 
               </div>

@@ -102,6 +102,23 @@ const SYSTEM_ROLE_OPTIONS: SystemRoleOption[] = [
     resource: 'Permission',
     action: 'delete',
   },
+
+  // T2 新增：讀取權限
+  {
+    describe: 'read user',
+    resource: 'User',
+    action: 'read',
+  },
+  {
+    describe: 'read group',
+    resource: 'Group',
+    action: 'read',
+  },
+  {
+    describe: 'read audit log',
+    resource: 'AuditLog',
+    action: 'read',
+  },
 ];
 
 
@@ -271,7 +288,7 @@ export default function RolesPage() {
       ) {
 
         alert(
-          '13 個系統 Role 都已建立，不需要再新增。'
+          '16 個系統 Role 都已建立，不需要再新增。'
         );
 
         return;
@@ -558,6 +575,7 @@ export default function RolesPage() {
             >
 
               <button
+                data-testid="role-create"
                 onClick={
                   handleOpenCreate
                 }
@@ -727,7 +745,10 @@ export default function RolesPage() {
                                     : meta?.action ===
                                         'delete'
                                       ? 'bg-red-50 text-red-500 ring-1 ring-red-100'
-                                      : 'bg-gray-50 text-gray-500 ring-1 ring-gray-100'
+                                      : meta?.action ===
+                                          'read'
+                                        ? 'bg-sky-50 text-sky-600 ring-1 ring-sky-100'
+                                        : 'bg-gray-50 text-gray-500 ring-1 ring-gray-100'
                               }`}
                             >
 

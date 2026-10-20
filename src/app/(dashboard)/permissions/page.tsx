@@ -107,6 +107,20 @@ const ROLE_OPERATION_MAP: Record<
     resource: 'Permission',
     action: 'delete',
   },
+
+  // T2 新增：讀取權限
+  'read user': {
+    resource: 'User',
+    action: 'read',
+  },
+  'read group': {
+    resource: 'Group',
+    action: 'read',
+  },
+  'read audit log': {
+    resource: 'AuditLog',
+    action: 'read',
+  },
 };
 
 
@@ -183,41 +197,35 @@ export default function PermissionsPage() {
       setLoading(true);
 
       try {
+        /**
+         * T2：/users 與 /groups 現在需要 User/read、Group/read。
+         * 用 allSettled，讓其中一個 403 不會拖垮整頁。
+         */
         const [
           permissionsRes,
           rolesRes,
           usersRes,
           groupsRes,
-        ] = await Promise.all([
+        ] = await Promise.allSettled([
           api.get('/permissions'),
           api.get('/roles'),
           api.get('/users'),
           api.get('/groups'),
         ]);
 
-        setPermissions(
-          permissionsRes.data.data ||
-          permissionsRes.data ||
-          []
-        );
+        const pick = (
+          result: PromiseSettledResult<any>
+        ) =>
+          result.status === 'fulfilled'
+            ? result.value.data.data ||
+              result.value.data ||
+              []
+            : [];
 
-        setRoles(
-          rolesRes.data.data ||
-          rolesRes.data ||
-          []
-        );
-
-        setUsers(
-          usersRes.data.data ||
-          usersRes.data ||
-          []
-        );
-
-        setGroups(
-          groupsRes.data.data ||
-          groupsRes.data ||
-          []
-        );
+        setPermissions(pick(permissionsRes));
+        setRoles(pick(rolesRes));
+        setUsers(pick(usersRes));
+        setGroups(pick(groupsRes));
 
       } catch (err) {
         console.error(
